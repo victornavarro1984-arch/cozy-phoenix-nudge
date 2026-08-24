@@ -13,16 +13,24 @@ import {
   Kanban,
   FileText,
   Timer,
-  Activity
+  Activity,
+  Database
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { CreateTaskModal } from '@/components/modals/CreateTaskModal';
+import { CreateHabitModal } from '@/components/modals/CreateHabitModal';
+import { CreateNoteModal } from '@/components/modals/CreateNoteModal';
+import { CommandPaletteModal } from '@/components/modals/CommandPaletteModal';
+import { BackupModal } from '@/components/modals/BackupModal';
 
 export const Navbar = () => {
   const { activeTab, setActiveTab, tasks, habits, focusSessions, searchQuery, setSearchQuery } = useWorkspace();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [isCmdOpen, setIsCmdOpen] = useState(false);
+  const [isBackupOpen, setIsBackupOpen] = useState(false);
 
   const completedTasks = tasks.filter((t) => t.status === 'done').length;
   const totalMinutes = focusSessions.reduce((acc, s) => acc + (s.type === 'work' ? s.durationMinutes : 0), 0);
@@ -57,15 +65,18 @@ export const Navbar = () => {
           </div>
         </div>
 
-        {/* Global Quick Search */}
-        <div className="relative max-w-xs md:max-w-md w-full hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search tasks, notes, habits..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-muted/40 rounded-full border-muted text-sm focus-visible:ring-indigo-500 focus-visible:bg-background transition-all"
-          />
+        {/* Global Quick Search Button that opens Command Palette */}
+        <div
+          onClick={() => setIsCmdOpen(true)}
+          className="relative max-w-xs md:max-w-md w-full hidden md:flex items-center justify-between px-3.5 py-1.5 rounded-full bg-muted/50 hover:bg-muted/80 border text-xs text-muted-foreground cursor-pointer transition-all"
+        >
+          <div className="flex items-center gap-2">
+            <Search className="h-3.5 w-3.5" />
+            <span>Search tasks, notes, habits or jump to tab...</span>
+          </div>
+          <kbd className="text-[10px] bg-background border px-1.5 py-0.5 rounded font-mono font-bold shadow-2xs">
+            ⌘K
+          </kbd>
         </div>
 
         {/* Action Widgets & Stats */}
@@ -86,6 +97,16 @@ export const Navbar = () => {
               <span>{totalMinutes}m Focus</span>
             </div>
           </div>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsBackupOpen(true)}
+            className="rounded-full h-8 w-8 text-muted-foreground hover:text-foreground"
+            title="Backup & Restore Data"
+          >
+            <Database className="w-4 h-4" />
+          </Button>
 
           <Button
             onClick={() => setIsTaskModalOpen(true)}
@@ -133,6 +154,16 @@ export const Navbar = () => {
       </div>
 
       <CreateTaskModal open={isTaskModalOpen} onOpenChange={setIsTaskModalOpen} />
+      <CreateHabitModal open={isHabitModalOpen} onOpenChange={setIsHabitModalOpen} />
+      <CreateNoteModal open={isNoteModalOpen} onOpenChange={setIsNoteModalOpen} />
+      <CommandPaletteModal
+        open={isCmdOpen}
+        onOpenChange={setIsCmdOpen}
+        onOpenTaskModal={() => setIsTaskModalOpen(true)}
+        onOpenHabitModal={() => setIsHabitModalOpen(true)}
+        onOpenNoteModal={() => setIsNoteModalOpen(true)}
+      />
+      <BackupModal open={isBackupOpen} onOpenChange={setIsBackupOpen} />
     </header>
   );
 };
