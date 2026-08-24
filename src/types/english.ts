@@ -57,3 +57,13 @@ export interface ConversationScenario {
   difficulty: Difficulty;
   dialogue: DialogueTurn[];
 }
+
+export interface Flashcard {
+  id: string;
+  word: string;
+  ipa: string;
+  partOfSpeech: string;
+  category: Category;
+  definitionSpanish: string;
+  exampleSentence: string;
+}

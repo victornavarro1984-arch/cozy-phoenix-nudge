@@ -1,4 +1,4 @@
-import { PracticePhrase, MinimalPair, PhoneticSound, QuizQuestion, ConversationScenario } from '@/types/english';
+import { PracticePhrase, MinimalPair, PhoneticSound, QuizQuestion, ConversationScenario, Flashcard } from '@/types/english';
 
 export const practicePhrases: PracticePhrase[] = [
   {
@@ -171,6 +171,45 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'I think this is a great opportunity.',
     audioHint: 'I think this is a great opportunity.'
   }
+];
+
+export const flashcards: Flashcard[] = [
+  {
+    id: 'f1',
+    word: 'Resilient',
+    ipa: '/rɪˈzɪliənt/',
+    partOfSpeech: 'adjective',
+    category: 'Daily Life',
+    definitionSpanish: 'Resiliente / Capaz de recuperarse rápidamente de las dificultades.',
+    exampleSentence: 'She is a resilient person who bounces back from challenges.',
+  },
+  {
+    id: 'f2',
+    word: 'Schedule',
+    ipa: '/ˈskedʒuːl/',
+    partOfSpeech: 'noun / verb',
+    category: 'Business',
+    definitionSpanish: 'Horario / Programar actividades o reuniones.',
+    exampleSentence: 'Let\'s schedule a follow-up call for next Tuesday.',
+  },
+  {
+    id: 'f3',
+    word: 'Exquisite',
+    ipa: '/ɪkˈskwɪzɪt/',
+    partOfSpeech: 'adjective',
+    category: 'Travel & Food',
+    definitionSpanish: 'Exquisito / De belleza o calidad extraordinaria.',
+    exampleSentence: 'The coffee served in this cafe has an exquisite flavor.',
+  },
+  {
+    id: 'f4',
+    word: 'Fathom',
+    ipa: '/ˈfæðəm/',
+    partOfSpeech: 'verb',
+    category: 'Idioms',
+    definitionSpanish: 'Comprender o descifrar algo complejo.',
+    exampleSentence: 'I cannot fathom why the flight was delayed.',
+  },
 ];
 
 export const conversationScenarios: ConversationScenario[] = [
