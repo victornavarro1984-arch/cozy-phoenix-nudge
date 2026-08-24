@@ -8,19 +8,18 @@ import {
   RotateCcw, 
   Volume2, 
   VolumeX, 
-  Sparkles, 
   Flame, 
   CheckCircle2, 
   Zap,
-  CloudRain,
-  Radio,
-  Waves,
-  Music
+  Volume1,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { ambientSound } from '@/utils/audioSynth';
 
 type Mode = 'work' | 'short_break' | 'long_break';
@@ -40,6 +39,8 @@ export const PomodoroStation = () => {
   const [selectedTaskId, setSelectedTaskId] = useState<string>('none');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [ambientTrack, setAmbientTrack] = useState<AmbientTrack>('off');
+  const [ambientVolume, setAmbientVolume] = useState<number>(50);
+  const [isZenMode, setIsZenMode] = useState<boolean>(false);
 
   const playChime = () => {
     if (!soundEnabled) return;
@@ -48,8 +49,8 @@ export const PomodoroStation = () => {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3); // A5
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
       gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
       osc.connect(gain);
@@ -72,6 +73,13 @@ export const PomodoroStation = () => {
     } else if (track === 'brown') {
       ambientSound.playBrownNoise();
     }
+    ambientSound.setVolume(ambientVolume / 100);
+  };
+
+  const handleVolumeChange = (vals: number[]) => {
+    const val = vals[0] ?? 50;
+    setAmbientVolume(val);
+    ambientSound.setVolume(val / 100);
   };
 
   useEffect(() => {
@@ -81,7 +89,7 @@ export const PomodoroStation = () => {
   }, []);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
+    let interval: ReturnType<typeof setInterval> | null = null;
     if (isRunning && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
@@ -128,197 +136,52 @@ export const PomodoroStation = () => {
   const progressPercent = Math.round(((totalDuration - timeLeft) / totalDuration) * 100);
 
   const pendingTasks = tasks.filter((t) => t.status !== 'done');
+  const todayStr = new Date().toISOString().split('T')[0];
   const todaySessions = focusSessions.filter(
-    (s) => s.completedAt.split('T')[0] === new Date().toISOString().split('T')[0]
+    (s) => s.completedAt && s.completedAt.split('T')[0] === todayStr
   );
-  const totalFocusMinutesToday = todaySessions.reduce((acc, s) => acc + (s.type === 'work' ? s.durationMinutes : 0), 0);
+  const totalFocusMinutesToday = todaySessions.reduce(
+    (acc, s) => acc + (s.type === 'work' ? s.durationMinutes : 0),
+    0
+  );
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-500">
-      <div className="text-center space-y-1">
-        <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Focus & Flow Station</h2>
-        <p className="text-xs md:text-sm text-muted-foreground">
-          Calibrate deep concentration, trigger neuro-focus states, and eliminate distractions.
-        </p>
-      </div>
+    <div className={`space-y-6 max-w-4xl mx-auto animate-in fade-in duration-500 ${isZenMode ? 'fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-6 max-w-none' : ''}`}>
+      {!isZenMode && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Focus & Flow Station</h2>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Calibrate deep concentration, trigger neuro-focus states, and eliminate distractions.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsZenMode(true)}
+            className="rounded-xl gap-1.5 text-xs font-semibold"
+          >
+            <Maximize2 className="w-4 h-4" /> Zen Mode
+          </Button>
+        </div>
+      )}
 
       {/* Main Timer Card */}
-      <Card className="rounded-3xl border-2 border-indigo-500/20 shadow-2xl bg-gradient-to-b from-card to-muted/30 overflow-hidden relative">
+      <Card className="w-full rounded-3xl border-2 border-indigo-500/20 shadow-2xl bg-gradient-to-b from-card to-muted/30 overflow-hidden relative">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-40 bg-indigo-500/10 blur-3xl pointer-events-none rounded-full" />
 
-        <CardContent className="p-8 md:p-12 flex flex-col items-center justify-center space-y-8 relative z-10">
-          {/* Mode Selector Tabs */}
-          <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-full border">
-            <button
-              onClick={() => handleModeChange('work')}
-              className={`px-5 py-2 rounded-full text-xs md:text-sm font-bold transition-all ${
-                mode === 'work'
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+        {isZenMode && (
+          <div className="absolute top-4 right-4 z-20">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsZenMode(false)}
+              className="rounded-xl gap-1.5 text-xs bg-background/80 backdrop-blur"
             >
-              🎯 Deep Work (25m)
-            </button>
-            <button
-              onClick={() => handleModeChange('short_break')}
-              className={`px-5 py-2 rounded-full text-xs md:text-sm font-bold transition-all ${
-                mode === 'short_break'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              ☕ Short Break (5m)
-            </button>
-            <button
-              onClick={() => handleModeChange('long_break')}
-              className={`px-5 py-2 rounded-full text-xs<dyad-write path="src/components/pomodoro/PomodoroStation.tsx" description="Pomodoro station integrated with ambient sound synthesizers and focus audio">
-"use client";
-
-import React, { useState, useEffect } from 'react';
-import { useWorkspace } from '@/context/WorkspaceContext';
-import { 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  Volume2, 
-  VolumeX, 
-  Sparkles, 
-  Flame, 
-  CheckCircle2, 
-  Zap,
-  CloudRain,
-  Radio,
-  Waves,
-  Music
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ambientSound } from '@/utils/audioSynth';
-
-type Mode = 'work' | 'short_break' | 'long_break';
-type AmbientTrack = 'off' | 'rain' | 'binaural' | 'brown';
-
-const MODE_DURATIONS: Record<Mode, number> = {
-  work: 25 * 60,
-  short_break: 5 * 60,
-  long_break: 15 * 60,
-};
-
-export const PomodoroStation = () => {
-  const { tasks, addFocusSession, focusSessions } = useWorkspace();
-  const [mode, setMode] = useState<Mode>('work');
-  const [timeLeft, setTimeLeft] = useState<number>(MODE_DURATIONS.work);
-  const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string>('none');
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [ambientTrack, setAmbientTrack] = useState<AmbientTrack>('off');
-
-  const playChime = () => {
-    if (!soundEnabled) return;
-    try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3); // A5
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.8);
-    } catch (e) {
-      console.warn('Audio playback unsupported', e);
-    }
-  };
-
-  const handleAmbientChange = (track: AmbientTrack) => {
-    setAmbientTrack(track);
-    if (track === 'off') {
-      ambientSound.stop();
-    } else if (track === 'rain') {
-      ambientSound.playRain();
-    } else if (track === 'binaural') {
-      ambientSound.playBinauralBeat();
-    } else if (track === 'brown') {
-      ambientSound.playBrownNoise();
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      ambientSound.stop();
-    };
-  }, []);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (isRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && isRunning) {
-      setIsRunning(false);
-      playChime();
-
-      const activeTask = tasks.find((t) => t.id === selectedTaskId);
-      addFocusSession({
-        type: mode,
-        durationMinutes: Math.round(MODE_DURATIONS[mode] / 60),
-        taskTitle: activeTask ? activeTask.title : undefined,
-      });
-
-      if (mode === 'work') {
-        setMode('short_break');
-        setTimeLeft(MODE_DURATIONS.short_break);
-      } else {
-        setMode('work');
-        setTimeLeft(MODE_DURATIONS.work);
-      }
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isRunning, timeLeft, mode, selectedTaskId]);
-
-  const handleModeChange = (newMode: Mode) => {
-    setMode(newMode);
-    setTimeLeft(MODE_DURATIONS[newMode]);
-    setIsRunning(false);
-  };
-
-  const handleReset = () => {
-    setIsRunning(false);
-    setTimeLeft(MODE_DURATIONS[mode]);
-  };
-
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-  const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-  const totalDuration = MODE_DURATIONS[mode];
-  const progressPercent = Math.round(((totalDuration - timeLeft) / totalDuration) * 100);
-
-  const pendingTasks = tasks.filter((t) => t.status !== 'done');
-  const todaySessions = focusSessions.filter(
-    (s) => s.completedAt.split('T')[0] === new Date().toISOString().split('T')[0]
-  );
-  const totalFocusMinutesToday = todaySessions.reduce((acc, s) => acc + (s.type === 'work' ? s.durationMinutes : 0), 0);
-
-  return (
-    <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-500">
-      <div className="text-center space-y-1">
-        <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Focus & Flow Station</h2>
-        <p className="text-xs md:text-sm text-muted-foreground">
-          Calibrate deep concentration, trigger neuro-focus states, and eliminate distractions.
-        </p>
-      </div>
-
-      {/* Main Timer Card */}
-      <Card className="rounded-3xl border-2 border-indigo-500/20 shadow-2xl bg-gradient-to-b from-card to-muted/30 overflow-hidden relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-40 bg-indigo-500/10 blur-3xl pointer-events-none rounded-full" />
+              <Minimize2 className="w-4 h-4" /> Exit Zen
+            </Button>
+          </div>
+        )}
 
         <CardContent className="p-8 md:p-12 flex flex-col items-center justify-center space-y-8 relative z-10">
           {/* Mode Selector Tabs */}
@@ -366,8 +229,8 @@ export const PomodoroStation = () => {
           </div>
 
           {/* Task Linker & Ambient Sound selector */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
-            <div className="space-y-1 text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
+            <div className="space-y-1.5 text-left">
               <label className="text-xs font-semibold text-muted-foreground">Focusing on Task</label>
               <Select value={selectedTaskId} onValueChange={setSelectedTaskId}>
                 <SelectTrigger className="rounded-xl text-xs font-medium bg-background">
@@ -384,7 +247,7 @@ export const PomodoroStation = () => {
               </Select>
             </div>
 
-            <div className="space-y-1 text-left">
+            <div className="space-y-1.5 text-left">
               <label className="text-xs font-semibold text-muted-foreground">Ambient Soundscape</label>
               <Select value={ambientTrack} onValueChange={(val) => handleAmbientChange(val as AmbientTrack)}>
                 <SelectTrigger className="rounded-xl text-xs font-medium bg-background">
@@ -397,6 +260,20 @@ export const PomodoroStation = () => {
                   <SelectItem value="brown">☕ Cafe Brown Noise</SelectItem>
                 </SelectContent>
               </Select>
+
+              {ambientTrack !== 'off' && (
+                <div className="flex items-center gap-2 pt-1">
+                  <Volume1 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <Slider
+                    value={[ambientVolume]}
+                    onValueChange={handleVolumeChange}
+                    min={0}
+                    max={100}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -446,37 +323,39 @@ export const PomodoroStation = () => {
       </Card>
 
       {/* Focus Session Log and Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-5 rounded-2xl border border-border/60 bg-card flex items-center gap-4 shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
-            <Zap className="w-6 h-6" />
+      {!isZenMode && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-5 rounded-2xl border border-border/60 bg-card flex items-center gap-4 shadow-sm">
+            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
+              <Zap className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground">Today's Focus Time</p>
+              <p className="text-2xl font-bold">{totalFocusMinutesToday} mins</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground">Today's Focus Time</p>
-            <p className="text-2xl font-bold">{totalFocusMinutesToday} mins</p>
-          </div>
-        </div>
 
-        <div className="p-5 rounded-2xl border border-border/60 bg-card flex items-center gap-4 shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-            <CheckCircle2 className="w-6 h-6" />
+          <div className="p-5 rounded-2xl border border-border/60 bg-card flex items-center gap-4 shadow-sm">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground">Sessions Completed</p>
+              <p className="text-2xl font-bold">{todaySessions.length}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground">Sessions Completed</p>
-            <p className="text-2xl font-bold">{todaySessions.length}</p>
-          </div>
-        </div>
 
-        <div className="p-5 rounded-2xl border border-border/60 bg-card flex items-center gap-4 shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-            <Flame className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground">Streak Multiplier</p>
-            <p className="text-2xl font-bold">1.5x XP</p>
+          <div className="p-5 rounded-2xl border border-border/60 bg-card flex items-center gap-4 shadow-sm">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+              <Flame className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground">Streak Multiplier</p>
+              <p className="text-2xl font-bold">1.5x XP</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

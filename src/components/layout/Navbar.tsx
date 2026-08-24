@@ -13,16 +13,26 @@ import {
   Kanban,
   FileText,
   Timer,
-  Activity
+  Activity,
+  Database,
+  Command
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { CreateTaskModal } from '@/components/modals/CreateTaskModal';
+import { CreateHabitModal } from '@/components/modals/CreateHabitModal';
+import { CreateNoteModal } from '@/components/modals/CreateNoteModal';
+import { BackupModal } from '@/components/modals/BackupModal';
+import { CommandPaletteModal } from '@/components/modals/CommandPaletteModal';
 
 export const Navbar = () => {
   const { activeTab, setActiveTab, tasks, habits, focusSessions, searchQuery, setSearchQuery } = useWorkspace();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
+  const [isCmdOpen, setIsCmdOpen] = useState(false);
 
   const completedTasks = tasks.filter((t) => t.status === 'done').length;
   const totalMinutes = focusSessions.reduce((acc, s) => acc + (s.type === 'work' ? s.durationMinutes : 0), 0);
@@ -33,7 +43,7 @@ export const Navbar = () => {
     { id: 'kanban', label: 'Kanban', icon: Kanban, badge: tasks.filter(t => t.status !== 'done').length },
     { id: 'pomodoro', label: 'Focus Station', icon: Timer },
     { id: 'habits', label: 'Habits', icon: Activity },
-    { id: 'notes', label: 'Notes', icon: FileText },
+    { id: 'notes', label: 'Notes Wiki', icon: FileText },
   ];
 
   return (
@@ -57,19 +67,25 @@ export const Navbar = () => {
           </div>
         </div>
 
-        {/* Global Quick Search */}
-        <div className="relative max-w-xs md:max-w-md w-full hidden md:block">
+        {/* Global Quick Search / Cmd+K trigger */}
+        <div className="relative max-w-xs md:max-w-md w-full hidden md:flex items-center">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search tasks, notes, habits..."
+            placeholder="Search workspace (or press ⌘K)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-muted/40 rounded-full border-muted text-sm focus-visible:ring-indigo-500 focus-visible:bg-background transition-all"
+            className="pl-9 pr-14 bg-muted/40 rounded-full border-muted text-sm focus-visible:ring-indigo-500 focus-visible:bg-background transition-all"
           />
+          <button
+            onClick={() => setIsCmdOpen(true)}
+            className="absolute right-3 text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground font-mono font-bold flex items-center gap-0.5"
+          >
+            <Command className="w-2.5 h-2.5" /> K
+          </button>
         </div>
 
         {/* Action Widgets & Stats */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className="hidden lg:flex items-center gap-4 bg-muted/40 px-3.5 py-1.5 rounded-full border border-border/50 text-xs font-medium text-muted-foreground">
             <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
               <CheckSquare className="w-3.5 h-3.5" />
@@ -86,6 +102,15 @@ export const Navbar = () => {
               <span>{totalMinutes}m Focus</span>
             </div>
           </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsBackupModalOpen(true)}
+            className="rounded-full gap-1.5 text-xs text-muted-foreground hover:text-foreground hidden sm:flex"
+          >
+            <Database className="w-3.5 h-3.5" /> Backup
+          </Button>
 
           <Button
             onClick={() => setIsTaskModalOpen(true)}
@@ -133,6 +158,16 @@ export const Navbar = () => {
       </div>
 
       <CreateTaskModal open={isTaskModalOpen} onOpenChange={setIsTaskModalOpen} />
+      <CreateHabitModal open={isHabitModalOpen} onOpenChange={setIsHabitModalOpen} />
+      <CreateNoteModal open={isNoteModalOpen} onOpenChange={setIsNoteModalOpen} />
+      <BackupModal open={isBackupModalOpen} onOpenChange={setIsBackupModalOpen} />
+      <CommandPaletteModal
+        open={isCmdOpen}
+        onOpenChange={setIsCmdOpen}
+        onOpenTaskModal={() => setIsTaskModalOpen(true)}
+        onOpenHabitModal={() => setIsHabitModalOpen(true)}
+        onOpenNoteModal={() => setIsNoteModalOpen(true)}
+      />
     </header>
   );
 };

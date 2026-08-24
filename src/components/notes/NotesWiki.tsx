@@ -7,25 +7,27 @@ import {
   Plus, 
   Pin, 
   Trash2, 
-  Tag, 
-  FileText, 
-  Sparkles, 
-  Search,
   BookOpen,
-  Calendar
+  Edit3,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
 import { CreateNoteModal } from '@/components/modals/CreateNoteModal';
 
 export const NotesWiki = () => {
   const { notes, updateNote, deleteNote, searchQuery } = useWorkspace();
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [selectedTag, setSelectedTag] = useState<string>('all');
-  const [activeNote, setActiveNote] = useState<Note | null>(notes[0] || null);
+  const [activeNoteId, setActiveNoteId] = useState<string | null>(notes[0]?.id || null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
 
+  const activeNote = notes.find((n) => n.id === activeNoteId) || null;
   const allTags = Array.from(new Set(notes.flatMap((n) => n.tags)));
 
   const filteredNotes = notes.filter((note) => {
@@ -35,6 +37,92 @@ export const NotesWiki = () => {
     const matchesTag = selectedTag === 'all' || note.tags.includes(selectedTag);
     return matchesSearch && matchesTag;
   });
+
+  const handleSelectNote = (note: Note) => {
+    setActiveNoteId(note.id);
+    setEditTitle(note.title);
+    setEditContent(note.content);
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = () => {
+    if (!activeNote) return;
+    updateNote(activeNote.id, {
+      title: editTitle.trim() || activeNote.title,
+      content: editContent,
+    });
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Knowledge Base & Wiki</h2>
+          <p className="text-xs md:text-sm text-<dyad-write path="src/components/notes/NotesWiki.tsx" description="Complete Knowledge Base & Wiki component with inline editor, tag filters, pinning, and deletion">
+"use client";
+
+import React, { useState } from 'react';
+import { useWorkspace } from '@/context/WorkspaceContext';
+import { Note } from '@/types';
+import { 
+  Plus, 
+  Pin, 
+  Trash2, 
+  BookOpen,
+  Edit3,
+  Check
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { CreateNoteModal } from '@/components/modals/CreateNoteModal';
+
+export const NotesWiki = () => {
+  const { notes, updateNote, deleteNote, searchQuery } = useWorkspace();
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string>('all');
+  const [activeNoteId, setActiveNoteId] = useState<string | null>(notes[0]?.id || null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
+
+  const activeNote = notes.find((n) => n.id === activeNoteId) || null;
+  const allTags = Array.from(new Set(notes.flatMap((n) => n.tags)));
+
+  const filteredNotes = notes.filter((note) => {
+    const matchesSearch =
+      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      note.content.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTag = selectedTag === 'all' || note.tags.includes(selectedTag);
+    return matchesSearch && matchesTag;
+  });
+
+  const handleSelectNote = (note: Note) => {
+    setActiveNoteId(note.id);
+    setEditTitle(note.title);
+    setEditContent(note.content);
+    setIsEditing(false);
+  };
+
+  const handleStartEditing = () => {
+    if (!activeNote) return;
+    setEditTitle(activeNote.title);
+    setEditContent(activeNote.content);
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!activeNote) return;
+    updateNote(activeNote.id, {
+      title: editTitle.trim() || activeNote.title,
+      content: editContent,
+    });
+    setIsEditing(false);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -91,7 +179,7 @@ export const NotesWiki = () => {
             return (
               <div
                 key={note.id}
-                onClick={() => setActiveNote(note)}
+                onClick={() => handleSelectNote(note)}
                 className={`p-4 rounded-xl border transition-all cursor-pointer space-y-2 ${
                   isSelected
                     ? 'bg-indigo-50/70 border-indigo-500/50 dark:bg-indigo-950/30 dark:border-indigo-500/50 shadow-sm'
@@ -118,7 +206,7 @@ export const NotesWiki = () => {
                       onClick={(e) => {
                         e.stopPropagation();
                         deleteNote(note.id);
-                        if (activeNote?.id === note.id) setActiveNote(null);
+                        if (activeNote?.id === note.id) setActiveNoteId(null);
                       }}
                       className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors"
                     >
@@ -155,26 +243,63 @@ export const NotesWiki = () => {
           {activeNote ? (
             <Card className="rounded-2xl border border-border/70 shadow-sm p-6 space-y-4">
               <div className="flex items-center justify-between border-b pb-4">
-                <div>
-                  <h3 className="text-xl font-bold tracking-tight">{activeNote.title}</h3>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                    <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                      {activeNote.category}
-                    </span>
-                    <span>•</span>
-                    <span>Last updated {new Date(activeNote.updatedAt).toLocaleDateString()}</span>
-                  </div>
+                <div className="flex-1 mr-4">
+                  {isEditing ? (
+                    <Input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className="font-bold text-lg rounded-lg"
+                      placeholder="Note Title"
+                    />
+                  ) : (
+                    <div>
+                      <h3 className="text-xl font-bold tracking-tight">{activeNote.title}</h3>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                        <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                          {activeNote.category}
+                        </span>
+                        <span>•</span>
+                        <span>Last updated {new Date(activeNote.updatedAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
+
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
-                    {activeNote.tags.join(', ')}
-                  </Badge>
+                  {isEditing ? (
+                    <Button
+                      size="sm"
+                      onClick={handleSaveEdit}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg gap-1 text-xs"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Save
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleStartEditing}
+                      className="rounded-lg gap-1 text-xs"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" /> Edit
+                    </Button>
+                  )}
                 </div>
               </div>
 
-              <div className="whitespace-pre-wrap font-sans text-sm text-foreground/90 leading-relaxed min-h-[350px]">
-                {activeNote.content}
-              </div>
+              {isEditing ? (
+                <Textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  rows={14}
+                  className="font-mono text-sm leading-relaxed rounded-xl w-full p-4"
+                  placeholder="Type your notes in Markdown..."
+                />
+              ) : (
+                <div className="whitespace-pre-wrap font-sans text-sm text-foreground/90 leading-relaxed min-h-[350px] p-2">
+                  {activeNote.content}
+                </div>
+              )}
             </Card>
           ) : (
             <div className="h-96 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center text-muted-foreground space-y-2">
