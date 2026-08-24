@@ -4,14 +4,12 @@ import React from 'react';
 import { 
   Volume2, 
   Sparkles, 
-  BookOpen, 
   Mic, 
   Award, 
   Layers, 
-  HelpCircle,
+  MessageSquare,
   Flame
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 
@@ -23,6 +21,7 @@ interface EnglishNavbarProps {
 export const EnglishNavbar: React.FC<EnglishNavbarProps> = ({ activeTab, setActiveTab }) => {
   const navItems = [
     { id: 'practice', label: 'Práctica de Voz', icon: Mic },
+    { id: 'conversation', label: 'Conversaciones', icon: MessageSquare },
     { id: 'phonetics', label: 'Fonética y Pares', icon: Layers },
     { id: 'quiz', label: 'Quiz de Audición', icon: Award },
   ];

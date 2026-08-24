@@ -3,13 +3,12 @@
 import React, { useState } from 'react';
 import { EnglishNavbar } from '@/components/english/EnglishNavbar';
 import { PronunciationCard } from '@/components/english/PronunciationCard';
+import { ConversationPractice } from '@/components/english/ConversationPractice';
 import { PhoneticsGuide } from '@/components/english/PhoneticsGuide';
 import { ListeningQuiz } from '@/components/english/ListeningQuiz';
 import { practicePhrases } from '@/data/englishData';
-import { PracticePhrase, Difficulty, Category } from '@/types/english';
-import { Sparkles, Volume2, Mic, CheckCircle2, Search } from 'lucide-react';
+import { Sparkles, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 
 export default function Index() {
@@ -102,6 +101,8 @@ export default function Index() {
             </div>
           </div>
         )}
+
+        {activeTab === 'conversation' && <ConversationPractice />}
 
         {activeTab === 'phonetics' && <PhoneticsGuide />}
 

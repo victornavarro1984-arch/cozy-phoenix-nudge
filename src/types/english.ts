@@ -39,3 +39,21 @@ export interface QuizQuestion {
   correctAnswer: string;
   audioHint: string;
 }
+
+export interface DialogueTurn {
+  id: string;
+  speaker: 'AI' | 'User';
+  english: string;
+  spanish: string;
+  ipa?: string;
+  promptTip?: string;
+}
+
+export interface ConversationScenario {
+  id: string;
+  title: string;
+  description: string;
+  category: Category;
+  difficulty: Difficulty;
+  dialogue: DialogueTurn[];
+}

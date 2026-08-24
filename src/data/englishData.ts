@@ -1,4 +1,4 @@
-import { PracticePhrase, MinimalPair, PhoneticSound, QuizQuestion } from '@/types/english';
+import { PracticePhrase, MinimalPair, PhoneticSound, QuizQuestion, ConversationScenario } from '@/types/english';
 
 export const fontData = {};
 
@@ -174,3 +174,355 @@ export const quizQuestions: QuizQuestion[] = [
     audioHint: 'I think this is a great opportunity.'
   }
 ];
+
+export const conversationScenarios: ConversationScenario[] = [
+  {
+    id: 'sc1',
+    title: '☕ Pedir Café en una Cafetería',
+    description: 'Practica pedir tu bebida favorita y responde al cajero en un entorno cotidiano.',
+    category: 'Travel & Food',
+    difficulty: 'beginner',
+    dialogue: [
+      {
+        id: 'd1',
+        speaker: 'AI',
+        english: 'Hi there! Welcome to Star Coffee. What can I get started for you today?',
+        spanish: '¡Hola! Bienvenido a Star Coffee. ¿Qué puedo prepararte hoy?',
+        ipa: '/haɪ ðeər! ˈwelkəm tə stɑː ˈkɒfi. wɒt kæn aɪ ɡet ˈstɑːtɪd fɔː juː təˈdeɪ?/',
+      },
+      {
+        id: 'd2',
+        speaker: 'User',
+        english: 'Hi, I would like a large iced coffee with oat milk, please.',
+        spanish: 'Hola, me gustaría un café helado grande con leche de avena, por favor.',
+        ipa: '/haɪ, aɪ wʊd laɪk ə lɑːdʒ aɪst ˈkɒfi wɪð əʊt mɪlk, pliːz/',
+        promptTip: 'Pronuncia "iced" (/aɪst/) claramente con el sonido final /t/.',
+      },
+      {
+        id: 'd3',
+        speaker: 'AI',
+        english: 'Great choice! Would you like any pastry or muffin with that?',
+        spanish: '¡Gran elección! ¿Te gustaría algún pastel o muffin para acompañar?',
+        ipa: '/ɡreɪt tʃɔɪs! wʊd juː laɪk ˈeni ˈpeɪstri ɔː ˈmʌfɪn wɪð ðæt?/',
+      },
+      {
+        id: 'd4',
+        speaker: 'User',
+        english: 'No thanks, just the coffee to go.',
+        spanish: 'No gracias, solo el café para llevar.',
+        ipa: '/nəʊ θæŋks, dʒʌst ðə ˈkɒfi tə ɡəʊ/',
+        promptTip: 'Asegura el sonido /θ/ en "thanks".',
+      },
+    ],
+  },
+  {
+    id: 'sc2',
+    title: '🏨 Check-in en el Hotel',
+    description: 'Simula el registro de entrada en la recepción de un hotel internacional.',
+    category: 'Travel & Food',
+    difficulty: 'intermediate',
+    dialogue: [
+      {
+        id: 'd1',
+        speaker: 'AI',
+        english: 'Good afternoon! Welcome to the Grand Plaza. How may I assist you?',
+        spanish: '¡Buenas tardes! Bienvenido al Grand Plaza. ¿En qué puedo ayudarle?',
+        ipa: '/ɡʊd ˌɑːftəˈnuːn! ˈwelkəm tə ðə ɡrænd ˈplɑːzə. haʊ meɪ aɪ əˈsɪst juː?/',
+      },
+      {
+        id: 'd2',
+        speaker: 'User',
+        english: 'Hello, I have a reservation under the name of Garcia.',
+        spanish: 'Hola, tengo una reservación a nombre de García.',
+        ipa: '/həˈləʊ, aɪ hæv ə ˌrezəˈveɪʃn ˈʌndər ðə neɪm əv ɡɑːˈsiːə/',
+        promptTip: 'Acentúa "reserVAtion" (/ˌrezəˈveɪʃn/).',
+      },
+      {
+        id: 'd3',
+        speaker: 'AI',
+        english: 'Perfect. May I please see your passport and a credit card for incidentals?',
+        spanish: 'Perfecto. ¿Podría ver su pasaporte y una tarjeta de crédito para gastos imprevistos?',
+        ipa: '/ˈpɜːfɪkt. meɪ aɪ pliːz siː jɔː ˈpɑːspɔːt ənd ə ˈkredɪt kɑːd fɔːr ˌɪnsɪˈdentlz?/',
+      },
+      {
+        id: 'd4',
+        speaker: 'User',
+        english: 'Sure, here you go. Is breakfast included in the booking?',
+        spanish: 'Claro, aquí tiene. ¿El desayuno está incluido en la reserva?',
+        ipa: '/ʃʊər, hɪər juː ɡəʊ. ɪz ˈbrekfəst ɪnˈkluːdɪd ɪn ðə ˈbʊkɪŋ?/',
+        promptTip: 'Pronuncia "breakfast" como /ˈbrekfəst/ (no brekFAST).',
+      },
+    ],
+  },
+];
+</dyad-data>
+
+<dyad-write path="src/components/english/ConversationPractice.tsx" description="Interactive AI dialogue roleplay component with live speech evaluation">
+"use client";
+
+import React, { useState } from 'react';
+import { conversationScenarios } from '@/data/englishData';
+import { ConversationScenario, DialogueTurn } from '@/types/english';
+import { speechEngine } from '@/utils/speech';
+import { 
+  Volume2, 
+  Mic, 
+  MicOff, 
+  Sparkles, 
+  MessageSquare, 
+  CheckCircle2, 
+  ArrowRight,
+  RotateCcw,
+  Bot,
+  User,
+  Volume1
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
+
+export const ConversationPractice = () => {
+  const [selectedScenario, setSelectedScenario] = useState<ConversationScenario>(conversationScenarios[0]);
+  const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+  const [spokenText, setSpokenText] = useState<string | null>(null);
+  const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [completedTurns, setCompletedTurns] = useState<number[]>([]);
+
+  const turn = selectedScenario.dialogue[currentTurnIndex];
+
+  const handlePlayTurnAudio = (text: string, rate: number = 0.9) => {
+    speechEngine.speak(text, rate);
+  };
+
+  const handleRecordUserTurn = async () => {
+    if (!turn || turn.speaker !== 'User') return;
+
+    setIsRecording(true);
+    setSpokenText(null);
+    setAccuracy(null);
+    toast.info('🎙️ Escuchando... Di tu frase en inglés');
+
+    try {
+      const transcript = await speechEngine.listen();
+      setIsRecording(false);
+      setSpokenText(transcript);
+
+      const acc = speechEngine.calculateAccuracy(turn.english, transcript);
+      setAccuracy(acc);
+
+      if (acc >= 70) {
+        confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 } });
+        toast.success(`🎉 ¡Excelente! Precisión: ${acc}%`);
+        if (!completedTurns.includes(currentTurnIndex)) {
+          setCompletedTurns([...completedTurns, currentTurnIndex]);
+        }
+      } else {
+        toast.warning(`👍 Intento registrado (${acc}% precisión). Practica la frase y repite.`);
+      }
+    } catch (err: any) {
+      setIsRecording(false);
+      toast.error(err.message || 'Error al usar el micrófono.');
+    }
+  };
+
+  const handleNextTurn = () => {
+    if (currentTurnIndex + 1 < selectedScenario.dialogue.length) {
+      const nextIdx = currentTurnIndex + 1;
+      setCurrentTurnIndex(nextIdx);
+      setSpokenText(null);
+      setAccuracy(null);
+
+      // Auto play if next speaker is AI
+      const nextTurn = selectedScenario.dialogue[nextIdx];
+      if (nextTurn && nextTurn.speaker === 'AI') {
+        setTimeout(() => {
+          handlePlayTurnAudio(nextTurn.english);
+        }, 300);
+      }
+    }
+  };
+
+  const handleRestartScenario = () => {
+    setCurrentTurnIndex(0);
+    setSpokenText(null);
+    setAccuracy(null);
+    setCompletedTurns([]);
+    if (selectedScenario.dialogue[0]?.speaker === 'AI') {
+      handlePlayTurnAudio(selectedScenario.dialogue[0].english);
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-extrabold tracking-tight">Práctica de Conversación y Diálogo</h2>
+          <p className="text-xs md:text-sm text-muted-foreground">
+            Simula situaciones de la vida real interactuando turno a turno con voz en inglés.
+          </p>
+        </div>
+
+        {/* Scenario selector */}
+        <select
+          value={selectedScenario.id}
+          onChange={(e) => {
+            const sc = conversationScenarios.find((s) => s.id === e.target.value);
+            if (sc) {
+              setSelectedScenario(sc);
+              setCurrentTurnIndex(0);
+              setSpokenText(null);
+              setAccuracy(null);
+              setCompletedTurns([]);
+            }
+          }}
+          className="text-xs bg-card border rounded-xl px-3 py-2 font-bold shadow-sm outline-none"
+        >
+          {conversationScenarios.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.title} ({s.category})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Scenario Progress Header */}
+      <Card className="rounded-2xl border-2 border-indigo-500/20 shadow-md p-5 space-y-4">
+        <div className="flex items-center justify-between gap-2 border-b pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-extrabold text-lg">{selectedScenario.title}</h3>
+              <Badge variant="secondary" className="text-[10px] font-bold">
+                {selectedScenario.difficulty}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">{selectedScenario.description}</p>
+          </div>
+
+          <Button
+            onClick={handleRestartScenario}
+            variant="outline"
+            size="sm"
+            className="rounded-xl gap-1 text-xs font-bold"
+          >
+            <RotateCcw className="w-3.5 h-3.5" /> Reiniciar
+          </Button>
+        </div>
+
+        {/* Dialogue Stream */}
+        <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+          {selectedScenario.dialogue.map((d, idx) => {
+            const isCurrent = idx === currentTurnIndex;
+            const isAI = d.speaker === 'AI';
+
+            return (
+              <div
+                key={d.id}
+                className={`p-4 rounded-2xl border transition-all space-y-2 ${
+                  isCurrent
+                    ? 'bg-indigo-500/10 border-indigo-500/50 ring-2 ring-indigo-500/20 shadow-sm'
+                    : 'bg-muted/30 border-border/50 opacity-80'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${
+                        isAI ? 'bg-indigo-600 text-white' : 'bg-emerald-600 text-white'
+                      }`}
+                    >
+                      {isAI ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      {isAI ? 'Interlocutor (IA)' : 'Tu Turno (Usuario)'}
+                    </span>
+                  </div>
+
+                  <Button
+                    onClick={() => handlePlayTurnAudio(d.english)}
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 gap-1"
+                  >
+                    <Volume2 className="w-3.5 h-3.5" /> Reproducir
+                  </Button>
+                </div>
+
+                <p className="font-extrabold text-base md:text-lg tracking-tight">"{d.english}"</p>
+                {d.ipa && <p className="text-xs font-mono text-indigo-500 font-bold">{d.ipa}</p>}
+                <p className="text-xs text-muted-foreground">🇲🇽 {d.spanish}</p>
+
+                {d.promptTip && (
+                  <p className="text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 p-2 rounded-lg">
+                    💡 <span className="font-bold">Consejo:</span> {d.promptTip}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Action Bar for Current Turn */}
+        {turn && (
+          <div className="p-4 rounded-2xl bg-card border border-border/80 shadow-sm space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              {turn.speaker === 'AI' ? (
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => handlePlayTurnAudio(turn.english, 0.9)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl gap-1.5 text-xs font-bold"
+                  >
+                    <Volume2 className="w-4 h-4" /> Escuchar Voz IA
+                  </Button>
+                  <Button
+                    onClick={() => handlePlayTurnAudio(turn.english, 0.65)}
+                    variant="outline"
+                    className="rounded-xl gap-1.5 text-xs font-semibold"
+                  >
+                    <Volume1 className="w-4 h-4" /> Escuchar Lento
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={handleRecordUserTurn}
+                  disabled={isRecording}
+                  className={`rounded-xl gap-2 font-bold text-xs shadow-md ${
+                    isRecording
+                      ? 'bg-rose-500 text-white animate-pulse'
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+                  }`}
+                >
+                  {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  {isRecording ? 'Escuchando tu respuesta...' : 'Grabar Mi Respuesta'}
+                </Button>
+              )}
+
+              {currentTurnIndex + 1 < selectedScenario.dialogue.length && (
+                <Button
+                  onClick={handleNextTurn}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl gap-1.5 text-xs font-bold"
+                >
+                  Siguiente Turno <ArrowRight className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+
+            {spokenText && (
+              <div className="pt-2 space-y-1">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="text-muted-foreground">Tu Transcripción:</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{accuracy}% Precisión</span>
+                </div>
+                <p className="text-xs font-semibold p-2.5 rounded-xl bg-muted/40 border">"{spokenText}"</p>
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+};
