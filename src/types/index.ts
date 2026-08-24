@@ -56,5 +56,17 @@ export interface UserStats {
   tasksCompleted: number;
   habitsChecked: number;
   currentStreak: number;
-  points: number;
+  xp: number;
+  level: number;
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  unlocked: boolean;
+  progress: number;
+  maxProgress: number;
+  category: 'tasks' | 'focus' | 'habits' | 'wiki';
 }
