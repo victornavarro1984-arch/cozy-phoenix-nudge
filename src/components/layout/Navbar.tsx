@@ -16,7 +16,8 @@ import {
   Activity,
   Database,
   Command,
-  BarChart2
+  BarChart2,
+  HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,7 @@ import { CreateHabitModal } from '@/components/modals/CreateHabitModal';
 import { CreateNoteModal } from '@/components/modals/CreateNoteModal';
 import { BackupModal } from '@/components/modals/BackupModal';
 import { CommandPaletteModal } from '@/components/modals/CommandPaletteModal';
+import { KeyboardShortcutsModal } from '@/components/modals/KeyboardShortcutsModal';
 
 export const Navbar = () => {
   const { activeTab, setActiveTab, tasks, habits, focusSessions, searchQuery, setSearchQuery, userStats } = useWorkspace();
@@ -35,10 +37,10 @@ export const Navbar = () => {
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [isCmdOpen, setIsCmdOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
   const completedTasks = tasks.filter((t) => t.status === 'done').length;
   const totalMinutes = focusSessions.reduce((acc, s) => acc + (s.type === 'work' ? s.durationMinutes : 0), 0);
-  const activeHabitStreaks = habits.reduce((acc, h) => acc + h.streak, 0);
 
   const navItems = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -108,6 +110,16 @@ export const Navbar = () => {
           <ThemeToggle />
 
           <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsShortcutsOpen(true)}
+            className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hidden sm:flex"
+            title="Keyboard Shortcuts (?)"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </Button>
+
+          <Button
             variant="outline"
             size="sm"
             onClick={() => setIsBackupModalOpen(true)}
@@ -165,6 +177,7 @@ export const Navbar = () => {
       <CreateHabitModal open={isHabitModalOpen} onOpenChange={setIsHabitModalOpen} />
       <CreateNoteModal open={isNoteModalOpen} onOpenChange={setIsNoteModalOpen} />
       <BackupModal open={isBackupModalOpen} onOpenChange={setIsBackupModalOpen} />
+      <KeyboardShortcutsModal open={isShortcutsOpen} onOpenChange={setIsShortcutsOpen} />
       <CommandPaletteModal
         open={isCmdOpen}
         onOpenChange={setIsCmdOpen}
