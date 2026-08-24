@@ -6,155 +6,6 @@ import {
   CheckCircle2, 
   Flame, 
   Clock, 
-  TrendingUp, 
-  ArrowRight, 
-  Calendar,
-  Sparkles,
-  Award,
-  Zap,
-  Target,
-  ArrowUpRight
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar
-} from 'recharts';
-import { CreateTaskModal } from '@/components/modals/CreateTaskModal';
-import { CreateHabitModal } from '@/components/modals/CreateHabitModal';
-
-const weeklyFocusData = [
-  { day: 'Mon', focusMinutes: 75, tasks: 4 },
-  { day: 'Tue', focusMinutes: 120, tasks: 6 },
-  { day: 'Wed', focusMinutes: 90, tasks: 5 },
-  { day: 'Thu', focusMinutes: 150, tasks: 8 },
-  { day: 'Fri', focusMinutes: 110, tasks: 7 },
-  { day: 'Sat', focusMinutes: 45, tasks: 2 },
-  { day: 'Sun', focusMinutes: 60, tasks: 3 },
-];
-
-export const OverviewTab = () => {
-  const { tasks, habits, focusSessions, setActiveTab, toggleHabitDay, moveTaskStatus } = useWorkspace();
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
-
-  const completedTasks = tasks.filter((t) => t.status === 'done');
-  const pendingTasks = tasks.filter((t) => t.status !== 'done');
-  const totalFocusMins = focusSessions.reduce((acc, s) => acc + (s.type === 'work' ? s.durationMinutes : 0), 0);
-  const todayStr = new Date().toISOString().split('T')[0];
-
-  const todayHabitsDone = habits.filter((h) => h.completedDates.includes(todayStr)).length;
-  const habitCompletionRate = habits.length > 0 ? Math.round((todayHabitsDone / habits.length) * 100) : 0;
-  const taskCompletionRate = tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0;
-
-  // Distribution chart data
-  const categoryCount: Record<string, number> = {};
-  tasks.forEach((t) => {
-    categoryCount[t.category] = (categoryCount[t.category] || 0) + 1;
-  });
-  const categoryData = Object.entries(categoryCount).map(([name, value]) => ({ name, value }));
-  const COLORS = ['#6366F1', '#06B6D4', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6'];
-
-  return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 p-6 md:p-8 text-white shadow-xl">
-        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute right-32 top-0 w-48 h-48 bg-cyan-500/20 rounded-full blur-2xl pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-indigo-200 border border-white/10">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Workspace Score: 94 / 100 (Optimal Flow)</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              Good day, Commander.
-            </h1>
-            <p className="text-sm md:text-base text-indigo-200 max-w-xl">
-              You have <span className="text-white font-bold">{pendingTasks.length} active tasks</span> and{' '}
-              <span className="text-white font-bold">{habits.length - todayHabitsDone} daily routines</span> awaiting completion today.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              onClick={() => setActiveTab('pomodoro')}
-              className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold rounded-xl gap-2 shadow-lg shadow-cyan-500/20"
-            >
-              <Zap className="w-4 h-4 fill-slate-950" />
-              Start Focus Session
-            </Button>
-            <Button
-              onClick={() => setIsTaskModalOpen(true)}
-              variant="outline"
-              className="border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white rounded-xl gap-2"
-            >
-              Quick Task
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="rounded-2xl border border-border/60 hover:shadow-md transition-shadow">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">Task Completion</p>
-              <p className="text-2xl font-bold">{completedTasks.length} / {tasks.length}</p>
-              <div className="flex items-center gap-2 pt-1">
-                <Progress value={taskCompletionRate} className="h-2 w-24" />
-                <span className="text-xs text-muted-foreground font-semibold">{taskCompletionRate}%</span>
-              </div>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border border-border/60 hover:shadow-md transition-shadow">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">Daily Habits Met</p>
-              <p className="text-2xl font-bold">{todayHabitsDone} / {habits.length}</p>
-              <div className="flex items-center gap-2 pt-1">
-                <Progress value={habitCompletionRate} className="h-2 w-24" />
-                <span className="text-xs text-muted-foreground font-semibold">{habitCompletionRate}%</span>
-              </div>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-              <Flame className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2<dyad-write path="src/components/dashboard/OverviewTab.tsx" description="Executive summary dashboard featuring analytics charts, productivity velocity, and quick action widgets">
-"use client";
-
-import React, { useState } from 'react';
-import { useWorkspace } from '@/<dyad-write path="src/components/dashboard/OverviewTab.tsx" description="Executive summary dashboard featuring analytics charts, productivity velocity, and quick action widgets">
-"use client";
-
-import React, { useState } from 'react';
-import { useWorkspace } from '@/context/WorkspaceContext';
-import { 
-  CheckCircle2, 
-  Flame, 
-  Clock, 
   ArrowRight, 
   Sparkles,
   Zap,
@@ -435,7 +286,7 @@ export const OverviewTab = () => {
                 <div className="flex items-center gap-3 overflow-hidden">
                   <button
                     onClick={() => moveTaskStatus(task.id, 'done')}
-                    className="h-5 w-5 rounded-md border-2 border-muted-foreground/40 hover:border-indigo-600 flex items-center justify-center transition-colors group-hover:border-indigo-500"
+                    className="h-5 w-5 rounded-md border-2 border-muted-foreground/40 hover:border-indigo-600 flex items-center justify-center transition-colors group-hover:border-indigo-500 shrink-0"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 text-transparent hover:text-indigo-600 transition-colors" />
                   </button>
@@ -458,7 +309,7 @@ export const OverviewTab = () => {
 
                 <Badge
                   variant={task.priority === 'urgent' ? 'destructive' : 'secondary'}
-                  className="capitalize text-[10px] font-bold"
+                  className="capitalize text-[10px] font-bold shrink-0 ml-2"
                 >
                   {task.priority}
                 </Badge>
