@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import { EnglishNavbar } from '@/components/english/EnglishNavbar';
 import { PronunciationCard } from '@/components/english/PronunciationCard';
-import { ConversationPractice } from '@/components/english/ConversationPractice';
 import { PhoneticsGuide } from '@/components/english/PhoneticsGuide';
 import { ListeningQuiz } from '@/components/english/ListeningQuiz';
+import { FlashcardDeck } from '@/components/english/FlashcardDeck';
 import { practicePhrases } from '@/data/englishData';
 import { Sparkles, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -102,7 +102,7 @@ export default function Index() {
           </div>
         )}
 
-        {activeTab === 'conversation' && <ConversationPractice />}
+        {activeTab === 'flashcards' && <FlashcardDeck />}
 
         {activeTab === 'phonetics' && <PhoneticsGuide />}
 

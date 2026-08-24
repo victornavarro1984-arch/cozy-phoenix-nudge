@@ -6,12 +6,8 @@ import {
   Mic, 
   Award, 
   Layers, 
-  MessageSquare,
   Flame,
-  Zap,
   BookOpen,
-  Volume1,
-  PlusCircle,
   Sparkles
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -28,10 +24,6 @@ export const EnglishNavbar: React.FC<EnglishNavbarProps> = ({ activeTab, setActi
 
   const navItems = [
     { id: 'practice', label: 'Práctica de Voz', icon: Mic },
-    { id: 'conversation', label: 'Conversaciones', icon: MessageSquare },
-    { id: 'shadowing', label: 'Shadowing', icon: Volume1 },
-    { id: 'custom', label: 'Mis Frases', icon: PlusCircle },
-    { id: 'twisters', label: 'Trabalenguas', icon: Zap },
     { id: 'flashcards', label: 'Tarjetas', icon: BookOpen },
     { id: 'phonetics', label: 'Fonética', icon: Layers },
     { id: 'quiz', label: 'Quiz', icon: Award },
