@@ -7,14 +7,18 @@ import { PhoneticsGuide } from '@/components/english/PhoneticsGuide';
 import { ListeningQuiz } from '@/components/english/ListeningQuiz';
 import { FlashcardDeck } from '@/components/english/FlashcardDeck';
 import { practicePhrases } from '@/data/englishData';
-import { Sparkles, Search } from 'lucide-react';
+import { Level } from '@/types/english';
+import { useProgress } from '@/context/ProgressContext';
+import { Sparkles, Search, Award, BookOpen, Layers } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 
 export default function Index() {
+  const { masteredPhrases, quizHistory } = useProgress();
   const [activeTab, setActiveTab] = useState<string>('practice');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
+  const [selectedLevel, setSelectedLevel] = useState<'all' | Level>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const filteredPhrases = practicePhrases.filter((p) => {
@@ -22,8 +26,8 @@ export default function Index() {
       p.english.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.spanish.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCat = selectedCategory === 'all' || p.category === selectedCategory;
-    const matchesDiff = selectedDifficulty === 'all' || p.difficulty === selectedDifficulty;
-    return matchesSearch && matchesCat && matchesDiff;
+    const matchesLvl = selectedLevel === 'all' || p.level === selectedLevel;
+    return matchesSearch && matchesCat && matchesLvl;
   });
 
   return (
@@ -47,6 +51,18 @@ export default function Index() {
                   Escucha la pronunciación nativa, graba tu voz con el micrófono y recibe retroalimentación inmediata sobre tu precisión.
                 </p>
               </div>
+
+              <div className="flex flex-wrap items-center gap-3 bg-white/10 p-3.5 rounded-xl border border-white/10 text-xs">
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-indigo-200">Dominadas</p>
+                  <p className="text-lg font-extrabold">{masteredPhrases.length} / {practicePhrases.length}</p>
+                </div>
+                <div className="h-8 w-px bg-white/20 mx-1" />
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-indigo-200">Quizzes Intentados</p>
+                  <p className="text-lg font-extrabold">{Object.keys(quizHistory).length}</p>
+                </div>
+              </div>
             </div>
 
             {/* Filter Bar */}
@@ -61,7 +77,17 @@ export default function Index() {
                 />
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <select
+                  value={selectedLevel}
+                  onChange={(e) => setSelectedLevel(e.target.value as any)}
+                  className="text-xs bg-muted/60 border rounded-xl px-3 py-2 font-semibold outline-none"
+                >
+                  <option value="all">Todos los Niveles</option>
+                  <option value="basic">Nivel Básico</option>
+                  <option value="advanced">Nivel Avanzado</option>
+                </select>
+
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
@@ -71,18 +97,8 @@ export default function Index() {
                   <option value="Daily Life">Vida Cotidiana</option>
                   <option value="Travel & Food">Viajes y Comida</option>
                   <option value="Business">Negocios</option>
+                  <option value="Linking & Reductions">Reducciones e Ilación</option>
                   <option value="Idioms">Modismos</option>
-                </select>
-
-                <select
-                  value={selectedDifficulty}
-                  onChange={(e) => setSelectedDifficulty(e.target.value)}
-                  className="text-xs bg-muted/60 border rounded-xl px-3 py-2 font-semibold outline-none"
-                >
-                  <option value="all">Todos los Niveles</option>
-                  <option value="beginner">Principiante</option>
-                  <option value="intermediate">Intermedio</option>
-                  <option value="advanced">Avanzado</option>
                 </select>
               </div>
             </div>
