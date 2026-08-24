@@ -66,6 +66,12 @@ export const ListeningQuiz = () => {
 
   const currentQ = sessionQuestions[currentIndex];
 
+  // Randomize response choices so the correct answer isn't always in index 0
+  const shuffledOptions = useMemo(() => {
+    if (!currentQ) return [];
+    return [...currentQ.options].sort(() => Math.random() - 0.5);
+  }, [currentQ?.id]);
+
   const handlePlayAudio = () => {
     if (currentQ) {
       speechEngine.speak(currentQ.audioHint, 0.85);
@@ -205,7 +211,7 @@ export const ListeningQuiz = () => {
 
           {/* Answer Options */}
           <div className="space-y-2.5 pt-2">
-            {currentQ.options.map((opt) => {
+            {shuffledOptions.map((opt) => {
               const isSelected = selectedOption === opt;
               const isCorrect = opt === currentQ.correctAnswer;
 
