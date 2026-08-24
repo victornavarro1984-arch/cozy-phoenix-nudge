@@ -15,7 +15,8 @@ import {
   Timer,
   Activity,
   Database,
-  Command
+  Command,
+  BarChart2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +29,7 @@ import { BackupModal } from '@/components/modals/BackupModal';
 import { CommandPaletteModal } from '@/components/modals/CommandPaletteModal';
 
 export const Navbar = () => {
-  const { activeTab, setActiveTab, tasks, habits, focusSessions, searchQuery, setSearchQuery } = useWorkspace();
+  const { activeTab, setActiveTab, tasks, habits, focusSessions, searchQuery, setSearchQuery, userStats } = useWorkspace();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
@@ -45,6 +46,7 @@ export const Navbar = () => {
     { id: 'pomodoro', label: 'Focus Station', icon: Timer },
     { id: 'habits', label: 'Habits', icon: Activity },
     { id: 'notes', label: 'Notes Wiki', icon: FileText },
+    { id: 'analytics', label: 'Analytics', icon: BarChart2 },
   ];
 
   return (
@@ -88,14 +90,13 @@ export const Navbar = () => {
         {/* Action Widgets & Stats */}
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="hidden lg:flex items-center gap-4 bg-muted/40 px-3.5 py-1.5 rounded-full border border-border/50 text-xs font-medium text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-amber-500 font-bold">
+              <span>Lvl {userStats.level}</span>
+            </div>
+            <div className="h-3 w-px bg-border" />
             <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
               <CheckSquare className="w-3.5 h-3.5" />
               <span>{completedTasks} Done</span>
-            </div>
-            <div className="h-3 w-px bg-border" />
-            <div className="flex items-center gap-1.5 text-amber-500">
-              <Flame className="w-3.5 h-3.5" />
-              <span>{activeHabitStreaks} Streak</span>
             </div>
             <div className="h-3 w-px bg-border" />
             <div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">

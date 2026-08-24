@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Task, Habit, Note, FocusSession, TaskStatus } from '@/types';
+import { Task, Habit, Note, FocusSession, TaskStatus, Achievement, UserStats } from '@/types';
 import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
 
@@ -26,6 +26,10 @@ interface WorkspaceContextType {
   addFocusSession: (session: Omit<FocusSession, 'id' | 'completedAt'>) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  scratchpad: string;
+  setScratchpad: (text: string) => void;
+  userStats: UserStats;
+  achievements: Achievement[];
 }
 
 const defaultTasks: Task[] = [
@@ -185,6 +189,10 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     ];
   });
 
+  const [scratchpad, setScratchpad] = useState<string>(() => {
+    return localStorage.getItem('nexus_scratchpad') || '💡 Quick Scratchpad:\n- Follow up on cloud load tests\n- Review API rate limits before launch';
+  });
+
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -203,6 +211,91 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     localStorage.setItem('nexus_focus_sessions', JSON.stringify(focusSessions));
   }, [focusSessions]);
+
+  useEffect(() => {
+    localStorage.setItem('nexus_scratchpad', scratchpad);
+  }, [scratchpad]);
+
+  // Dynamic user stats & leveling
+  const completedTasksCount = tasks.filter((t) => t.status === 'done').length;
+  const totalFocusMins = focusSessions.reduce((acc, s) => acc + (s.type === 'work' ? s.durationMinutes : 0), 0);
+  const totalHabitChecks = habits.reduce((acc, h) => acc + h.completedDates.length, 0);
+
+  const xp = completedTasksCount * 50 + totalFocusMins * 2 + totalHabitChecks * 20 + notes.length * 15;
+  const level = Math.floor(xp / 250) + 1;
+
+  const userStats: UserStats = {
+    totalFocusMinutes: totalFocusMins,
+    tasksCompleted: completedTasksCount,
+    habitsChecked: totalHabitChecks,
+    currentStreak: Math.max(...habits.map((h) => h.streak), 0),
+    xp,
+    level,
+  };
+
+  // Dynamic Achievements list based on user performance
+  const achievements: Achievement[] = [
+    {
+      id: 'ach-1',
+      title: 'First Step',
+      description: 'Complete your first task milestone',
+      icon: '🎯',
+      unlocked: completedTasksCount >= 1,
+      progress: Math.min(completedTasksCount, 1),
+      maxProgress: 1,
+      category: 'tasks',
+    },
+    {
+      id: 'ach-2',
+      title: 'Taskmaster',
+      description: 'Complete 5 deliverables on the Kanban board',
+      icon: '⚡',
+      unlocked: completedTasksCount >= 5,
+      progress: Math.min(completedTasksCount, 5),
+      maxProgress: 5,
+      category: 'tasks',
+    },
+    {
+      id: 'ach-3',
+      title: 'Deep Worker',
+      description: 'Log 60 minutes of uninterrupted Pomodoro focus time',
+      icon: '⏱️',
+      unlocked: totalFocusMins >= 60,
+      progress: Math.min(totalFocusMins, 60),
+      maxProgress: 60,
+      category: 'focus',
+    },
+    {
+      id: 'ach-4',
+      title: 'Flow Catalyst',
+      description: 'Log 300 minutes of deep focus time',
+      icon: '🔥',
+      unlocked: totalFocusMins >= 300,
+      progress: Math.min(totalFocusMins, 300),
+      maxProgress: 300,
+      category: 'focus',
+    },
+    {
+      id: 'ach-5',
+      title: 'Habit Machine',
+      description: 'Maintain a 3-day habit streak',
+      icon: '💎',
+      unlocked: userStats.currentStreak >= 3,
+      progress: Math.min(userStats.currentStreak, 3),
+      maxProgress: 3,
+      category: 'habits',
+    },
+    {
+      id: 'ach-6',
+      title: 'Archivist',
+      description: 'Document 2 knowledge articles in Notes Wiki',
+      icon: '📚',
+      unlocked: notes.length >= 2,
+      progress: Math.min(notes.length, 2),
+      maxProgress: 2,
+      category: 'wiki',
+    },
+  ];
 
   const addTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'timeSpentMinutes'>) => {
     const newTask: Task = {
@@ -236,7 +329,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               spread: 60,
               origin: { y: 0.7 },
             });
-            toast.success(`🎉 Completed: "${t.title}"`);
+            toast.success(`🎉 Completed: "${t.title}" (+50 XP)`);
           }
           return { ...t, status: newStatus };
         }
@@ -297,6 +390,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
           if (!exists) {
             confetti({ particleCount: 30, spread: 45, origin: { y: 0.8 } });
+            toast.success(`🔥 Habit checked (+20 XP)`);
           }
 
           return {
@@ -323,7 +417,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       updatedAt: new Date().toISOString(),
     };
     setNotes((prev) => [newNote, ...prev]);
-    toast.success('Note saved');
+    toast.success('Note saved (+15 XP)');
   };
 
   const updateNote = (id: string, updates: Partial<Note>) => {
@@ -353,7 +447,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       spread: 70,
       origin: { y: 0.6 },
     });
-    toast.success(`🎯 Focus session logged: +${sessionData.durationMinutes} mins!`);
+    toast.success(`🎯 Focus session logged: +${sessionData.durationMinutes * 2} XP!`);
   };
 
   return (
@@ -379,6 +473,10 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         addFocusSession,
         searchQuery,
         setSearchQuery,
+        scratchpad,
+        setScratchpad,
+        userStats,
+        achievements,
       }}
     >
       {children}

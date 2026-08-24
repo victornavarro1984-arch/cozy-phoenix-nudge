@@ -8,6 +8,8 @@ import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { PomodoroStation } from '@/components/pomodoro/PomodoroStation';
 import { HabitMatrix } from '@/components/habits/HabitMatrix';
 import { NotesWiki } from '@/components/notes/NotesWiki';
+import { AnalyticsView } from '@/components/analytics/AnalyticsView';
+import { ScratchpadDrawer } from '@/components/scratchpad/ScratchpadDrawer';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 
 const MainContent = () => {
@@ -23,7 +25,10 @@ const MainContent = () => {
         {activeTab === 'pomodoro' && <PomodoroStation />}
         {activeTab === 'habits' && <HabitMatrix />}
         {activeTab === 'notes' && <NotesWiki />}
+        {activeTab === 'analytics' && <AnalyticsView />}
       </main>
+
+      <ScratchpadDrawer />
 
       <footer className="border-t py-4 text-center text-xs text-muted-foreground">
         <MadeWithDyad />
