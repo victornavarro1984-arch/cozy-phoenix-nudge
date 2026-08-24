@@ -1,6 +1,6 @@
 import { PracticePhrase, MinimalPair, PhoneticSound, QuizQuestion } from '@/types/english';
 
-export fontData = {};
+export const fontData = {};
 
 export const practicePhrases: PracticePhrase[] = [
   {
