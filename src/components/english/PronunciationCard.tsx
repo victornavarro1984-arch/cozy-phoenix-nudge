@@ -3,20 +3,20 @@
 import React, { useState } from 'react';
 import { PracticePhrase } from '@/types/english';
 import { speechEngine } from '@/utils/speech';
+import { useProgress } from '@/context/ProgressContext';
 import { 
   Volume2, 
   Mic, 
   MicOff, 
   Sparkles, 
-  CheckCircle2, 
-  AlertCircle,
-  HelpCircle,
-  Volume1,
-  Award,
-  RefreshCw
+  Bookmark, 
+  BookmarkCheck, 
+  Info,
+  CheckCircle2,
+  Volume1
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
@@ -24,16 +24,18 @@ import confetti from 'canvas-confetti';
 
 interface PronunciationCardProps {
   phrase: PracticePhrase;
-  onMastered?: () => void;
 }
 
-export const PronunciationCard: React.FC<PronunciationCardProps> = ({ phrase, onMastered }) => {
+export const PronunciationCard: React.FC<PronunciationCardProps> = ({ phrase }) => {
+  const { isPhraseMastered, toggleMasteredPhrase, addXp } = useProgress();
   const [isRecording, setIsRecording] = useState(false);
   const [spokenResult, setSpokenResult] = useState<string | null>(null);
   const [accuracy, setAccuracy] = useState<number | null>(null);
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(0.9);
+  const [showTips, setShowTips] = useState(false);
 
-  const handlePlayAudio = (rate: number = playbackSpeed) => {
+  const isMastered = isPhraseMastered(phrase.id);
+
+  const handlePlayAudio = (rate: number = 0.9) => {
     speechEngine.speak(phrase.english, rate);
   };
 
@@ -41,7 +43,7 @@ export const PronunciationCard: React.FC<PronunciationCardProps> = ({ phrase, on
     setIsRecording(true);
     setSpokenResult(null);
     setAccuracy(null);
-    toast.info('🎙️ Escuchando... Habla ahora en inglés');
+    toast.info('🎙️ Escuchando tu voz en inglés...');
 
     try {
       const transcript = await speechEngine.listen();
@@ -53,72 +55,69 @@ export const PronunciationCard: React.FC<PronunciationCardProps> = ({ phrase, on
 
       if (acc >= 75) {
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
-        toast.success(`🎉 ¡Excelente pronunciación! Precisión: ${acc}%`);
-        if (onMastered) onMastered();
+        addXp(20);
+        toast.success(`🎉 ¡Excelente pronunciación! Precisión: ${acc}% (+20 XP)`);
+        if (!isMastered) {
+          toggleMasteredPhrase(phrase.id);
+        }
       } else if (acc >= 40) {
-        toast.warning(`👍 Buen intento. Precisión: ${acc}%. Revisa la pista fonética.`);
+        toast.warning(`👍 Buen intento (${acc}%). Escucha la versión lenta e inténtalo de nuevo.`);
       } else {
-        toast.error(`💡 Precisión: ${acc}%. Escucha el audio lento y vuelve a intentarlo.`);
+        toast.error(`💡 Precisión: ${acc}%. Intenta articular cada palabra con más claridad.`);
       }
     } catch (err: any) {
       setIsRecording(false);
-      toast.error(err.message || 'Error al acceder al micrófono.');
-    }
-  };
-
-  const getDifficultyBadge = () => {
-    switch (phrase.difficulty) {
-      case 'beginner':
-        return <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border-emerald-500/30">🟢 Principiante</Badge>;
-      case 'intermediate':
-        return <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border-amber-500/30">🟡 Intermedio</Badge>;
-      case 'advanced':
-        return <Badge className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold border-indigo-500/30">🟣 Avanzado</Badge>;
+      toast.error(err.message || 'Error con el micrófono.');
     }
   };
 
   return (
-    <Card className="rounded-2xl border-2 border-indigo-500/20 shadow-md bg-gradient-to-b from-card to-muted/20 overflow-hidden">
-      <CardHeader className="pb-3">
+    <Card className={`rounded-2xl border-2 transition-all ${
+      isMastered ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-border/80 bg-card'
+    }`}>
+      <CardContent className="p-5 space-y-4">
+        {/* Header */}
         <div className="flex items-center justify-between gap-2">
-          <Badge variant="outline" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {phrase.category}
-          </Badge>
-          {getDifficultyBadge()}
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-5">
-        {/* Main English Phrase & Phonetics */}
-        <div className="text-center space-y-2 bg-muted/40 p-5 rounded-2xl border border-border/50">
-          <h3 className="text-xl md:text-2xl font-extrabold tracking-tight text-foreground leading-snug">
-            "{phrase.english}"
-          </h3>
-          <p className="text-sm font-mono font-bold text-indigo-600 dark:text-indigo-400 tracking-wide">
-            {phrase.ipa}
-          </p>
-          <p className="text-xs text-muted-foreground italic font-medium pt-1">
-            🇲🇽 {phrase.spanish}
-          </p>
-        </div>
-
-        {/* Pronunciation Tip */}
-        <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-200 font-medium">
-          <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold">Pista de Pronunciación:</span> {phrase.tips}
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px] font-bold uppercase">
+              {phrase.category}
+            </Badge>
+            <Badge className={`text-[10px] font-bold ${
+              phrase.difficulty === 'beginner' ? 'bg-emerald-500/10 text-emerald-600' :
+              phrase.difficulty === 'intermediate' ? 'bg-amber-500/10 text-amber-600' :
+              'bg-rose-500/10 text-rose-600'
+            }`}>
+              {phrase.difficulty}
+            </Badge>
           </div>
+
+          <button
+            onClick={() => toggleMasteredPhrase(phrase.id)}
+            className={`p-1.5 rounded-lg transition-colors ${
+              isMastered ? 'text-emerald-500 bg-emerald-500/10' : 'text-muted-foreground hover:text-foreground'
+            }`}
+            title={isMastered ? 'Dominada' : 'Marcar como dominada'}
+          >
+            {isMastered ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+          </button>
         </div>
 
-        {/* Audio Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t">
+        {/* Target sentence */}
+        <div className="space-y-1">
+          <h3 className="text-lg md:text-xl font-extrabold tracking-tight">{phrase.english}</h3>
+          <p className="text-xs font-mono font-bold text-indigo-500">{phrase.ipa}</p>
+          <p className="text-xs text-muted-foreground">🇲🇽 {phrase.spanish}</p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t">
           <div className="flex items-center gap-2">
             <Button
               onClick={() => handlePlayAudio(0.9)}
               size="sm"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl gap-1.5 text-xs font-bold shadow-sm"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl gap-1.5 text-xs font-bold"
             >
-              <Volume2 className="w-4 h-4" /> Escuchar (Normal)
+              <Volume2 className="w-4 h-4" /> Escuchar
             </Button>
             <Button
               onClick={() => handlePlayAudio(0.65)}
@@ -126,53 +125,53 @@ export const PronunciationCard: React.FC<PronunciationCardProps> = ({ phrase, on
               size="sm"
               className="rounded-xl gap-1.5 text-xs font-semibold"
             >
-              <Volume1 className="w-4 h-4 text-indigo-500" /> Despacio (Lento)
+              <Volume1 className="w-4 h-4 text-indigo-500" /> Lento
             </Button>
           </div>
 
-          <Button
-            onClick={handleStartRecording}
-            disabled={isRecording}
-            size="sm"
-            className={`rounded-xl gap-2 font-bold text-xs transition-all ${
-              isRecording
-                ? 'bg-rose-500 text-white animate-pulse'
-                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20'
-            }`}
-          >
-            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            {isRecording ? 'Escuchando...' : 'Grabar Mi Voz'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowTips(!showTips)}
+              className="p-2 rounded-xl text-muted-foreground hover:bg-muted transition-colors text-xs font-bold flex items-center gap-1"
+            >
+              <Info className="w-4 h-4 text-indigo-500" /> Tips
+            </button>
+
+            <Button
+              onClick={handleStartRecording}
+              disabled={isRecording}
+              size="sm"
+              className={`rounded-xl gap-1.5 font-bold text-xs ${
+                isRecording
+                  ? 'bg-rose-500 text-white animate-pulse'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+              }`}
+            >
+              {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              {isRecording ? 'Escuchando...' : 'Grabar Voz'}
+            </Button>
+          </div>
         </div>
 
-        {/* Feedback / Results Section */}
-        {spokenResult && (
-          <div className="space-y-3 pt-2 border-t animate-in fade-in">
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs font-bold">
-                <span className="text-muted-foreground">Tu Reconocimiento de Voz:</span>
-                <span
-                  className={`px-2 py-0.5 rounded-md font-extrabold ${
-                    (accuracy || 0) >= 75
-                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
-                  }`}
-                >
-                  {accuracy}% Precisión
-                </span>
-              </div>
-              <p className="text-sm font-semibold p-3 rounded-xl bg-background border font-sans">
-                "{spokenResult}"
-              </p>
-            </div>
+        {/* Tips box */}
+        {showTips && (
+          <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs space-y-1 animate-in fade-in">
+            <p className="font-bold text-indigo-900 dark:text-indigo-200">💡 Consejos de Pronunciación:</p>
+            <p className="text-muted-foreground">{phrase.tips}</p>
+            <p className="text-[11px] text-muted-foreground italic">Contexto: {phrase.exampleContext}</p>
+          </div>
+        )}
 
+        {/* Result & accuracy */}
+        {spokenResult && (
+          <div className="space-y-1.5 pt-2 border-t">
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className="text-muted-foreground">Tu voz detectada:</span>
+              <span className="text-emerald-600 font-extrabold">{accuracy}% Precisión</span>
+            </div>
+            <p className="text-xs font-semibold p-2.5 rounded-xl bg-muted/40 border">"{spokenResult}"</p>
             {accuracy !== null && (
-              <Progress
-                value={accuracy}
-                className={`h-2.5 rounded-full ${
-                  accuracy >= 75 ? 'bg-emerald-500' : accuracy >= 40 ? 'bg-amber-500' : 'bg-rose-500'
-                }`}
-              />
+              <Progress value={accuracy} className="h-2 rounded-full" />
             )}
           </div>
         )}

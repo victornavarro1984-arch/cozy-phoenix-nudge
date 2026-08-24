@@ -3,15 +3,20 @@
 import React from 'react';
 import { 
   Volume2, 
-  Sparkles, 
   Mic, 
   Award, 
   Layers, 
   MessageSquare,
-  Flame
+  Flame,
+  Zap,
+  BookOpen,
+  Volume1,
+  PlusCircle,
+  Sparkles
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
+import { useProgress } from '@/context/ProgressContext';
 
 interface EnglishNavbarProps {
   activeTab: string;
@@ -19,11 +24,17 @@ interface EnglishNavbarProps {
 }
 
 export const EnglishNavbar: React.FC<EnglishNavbarProps> = ({ activeTab, setActiveTab }) => {
+  const { xp, streak } = useProgress();
+
   const navItems = [
     { id: 'practice', label: 'Práctica de Voz', icon: Mic },
     { id: 'conversation', label: 'Conversaciones', icon: MessageSquare },
-    { id: 'phonetics', label: 'Fonética y Pares', icon: Layers },
-    { id: 'quiz', label: 'Quiz de Audición', icon: Award },
+    { id: 'shadowing', label: 'Shadowing', icon: Volume1 },
+    { id: 'custom', label: 'Mis Frases', icon: PlusCircle },
+    { id: 'twisters', label: 'Trabalenguas', icon: Zap },
+    { id: 'flashcards', label: 'Tarjetas', icon: BookOpen },
+    { id: 'phonetics', label: 'Fonética', icon: Layers },
+    { id: 'quiz', label: 'Quiz', icon: Award },
   ];
 
   return (
@@ -51,7 +62,12 @@ export const EnglishNavbar: React.FC<EnglishNavbarProps> = ({ activeTab, setActi
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-2 bg-amber-500/10 px-3 py-1 rounded-full text-xs font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20">
             <Flame className="w-4 h-4 fill-amber-500" />
-            <span>5 Días de Racha</span>
+            <span>{streak} Días de Racha</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-indigo-500/10 px-3 py-1 rounded-full text-xs font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+            <span>{xp} XP</span>
           </div>
 
           <ThemeToggle />
@@ -68,7 +84,7 @@ export const EnglishNavbar: React.FC<EnglishNavbarProps> = ({ activeTab, setActi
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
                   isActive
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/70'
