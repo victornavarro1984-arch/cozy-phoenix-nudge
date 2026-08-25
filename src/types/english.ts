@@ -44,6 +44,7 @@ export interface PhoneticSound {
 export interface QuizQuestion {
   id: string;
   targetEnglish: string;
+  sentenceWithBlank: string;
   spanishPrompt: string;
   ipa: string;
   level: Level;
