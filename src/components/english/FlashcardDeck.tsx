@@ -10,7 +10,8 @@ import {
   CheckCircle2, 
   ArrowLeft, 
   ArrowRight,
-  Sparkles
+  Sparkles,
+  BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -34,7 +35,7 @@ export const FlashcardDeck = () => {
     const wasMastered = isFlashcardMastered(card.id);
     toggleMasteredFlashcard(card.id);
     if (!wasMastered) {
-      confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 } });
+      confetti({ particleCount: 40, spread: 55, origin: { y: 0.7 } });
     }
   };
 
@@ -52,40 +53,40 @@ export const FlashcardDeck = () => {
 
   return (
     <div className="max-w-xl mx-auto space-y-6 animate-in fade-in duration-500">
-      {/* Title */}
-      <div className="flex items-center justify-between">
+      {/* Título & Progreso */}
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-extrabold tracking-tight">Mazo de Vocabulario</h2>
           <p className="text-xs text-muted-foreground">
-            Haz clic en la tarjeta para voltearla y revisar la definición.
+            Toca la tarjeta para voltearla y revisar la definición.
           </p>
         </div>
 
-        <Badge variant="secondary" className="font-bold text-xs">
+        <Badge variant="secondary" className="font-bold text-xs px-3 py-1 rounded-full border">
           {masteredFlashcards.length} / {flashcards.length} Dominadas
         </Badge>
       </div>
 
-      {/* Main Flip Card Container */}
+      {/* Contenedor de la Tarjeta con Volteo 3D */}
       <div
         onClick={() => setIsFlipped(!isFlipped)}
-        className="w-full h-80 cursor-pointer [perspective:1000px] group"
+        className="w-full h-80 sm:h-84 cursor-pointer [perspective:1000px] group select-none"
       >
         <div
           className={`relative w-full h-full rounded-3xl transition-all duration-500 [transform-style:preserve-3d] shadow-xl border-2 border-indigo-500/20 ${
             isFlipped ? '[transform:rotateY(180deg)]' : ''
           }`}
         >
-          {/* FRONT side */}
-          <Card className="absolute inset-0 w-full h-full rounded-3xl p-8 flex flex-col items-center justify-between text-center [backface-visibility:hidden] bg-gradient-to-b from-card to-muted/30">
+          {/* FRENTE */}
+          <Card className="absolute inset-0 w-full h-full rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-between text-center [backface-visibility:hidden] bg-gradient-to-b from-card via-card to-muted/40">
             <div className="flex items-center justify-between w-full">
-              <Badge variant="outline" className="text-[10px] font-bold uppercase">
+              <Badge variant="outline" className="text-[10px] font-bold uppercase rounded-full px-2.5">
                 {card.category}
               </Badge>
               <button
                 onClick={handleToggleMastered}
-                className={`p-1.5 rounded-full transition-colors ${
-                  isMastered ? 'text-emerald-500 bg-emerald-500/10' : 'text-muted-foreground hover:text-emerald-500'
+                className={`p-2 rounded-2xl transition-all active:scale-90 ${
+                  isMastered ? 'text-emerald-600 bg-emerald-500/15 border border-emerald-500/30' : 'text-muted-foreground hover:text-emerald-500'
                 }`}
                 title={isMastered ? 'Dominada' : 'Marcar como Dominada'}
               >
@@ -93,39 +94,39 @@ export const FlashcardDeck = () => {
               </button>
             </div>
 
-            <div className="space-y-2">
-              <h3 className="text-3xl font-extrabold tracking-tight">{card.word}</h3>
-              <p className="text-sm font-mono text-indigo-500 font-bold">{card.ipa}</p>
+            <div className="space-y-2 py-2">
+              <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">{card.word}</h3>
+              <p className="text-sm font-mono text-indigo-500 dark:text-indigo-400 font-bold">{card.ipa}</p>
               <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest">
                 ({card.partOfSpeech})
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Button
                 onClick={handlePlayWord}
                 size="sm"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl gap-1.5 text-xs font-bold"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl min-h-[44px] px-4 gap-2 text-xs font-bold shadow-md shadow-indigo-600/20 active:scale-95"
               >
                 <Volume2 className="w-4 h-4" /> Escuchar
               </Button>
-              <span className="text-[11px] text-muted-foreground flex items-center gap-1 font-semibold">
-                <RotateCw className="w-3.5 h-3.5" /> Toca para voltear
+              <span className="text-xs text-muted-foreground flex items-center gap-1 font-semibold">
+                <RotateCw className="w-3.5 h-3.5 text-indigo-500" /> Voltear
               </span>
             </div>
           </Card>
 
-          {/* BACK side */}
-          <Card className="absolute inset-0 w-full h-full rounded-3xl p-8 flex flex-col items-center justify-between text-center [backface-visibility:hidden] [transform:rotateY(180deg)] bg-gradient-to-b from-slate-900 to-indigo-950 text-white">
+          {/* REVERSO */}
+          <Card className="absolute inset-0 w-full h-full rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-between text-center [backface-visibility:hidden] [transform:rotateY(180deg)] bg-gradient-to-b from-slate-900 to-indigo-950 text-white shadow-xl">
             <div className="w-full text-right">
-              <span className="text-[10px] text-indigo-200 font-bold uppercase">
+              <span className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider">
                 Traducción & Contexto
               </span>
             </div>
 
-            <div className="space-y-3">
-              <h4 className="text-xl font-bold text-amber-400">{card.definitionSpanish}</h4>
-              <p className="text-xs italic text-indigo-200 leading-relaxed max-w-sm">
+            <div className="space-y-3 py-2">
+              <h4 className="text-xl sm:text-2xl font-extrabold text-amber-400">{card.definitionSpanish}</h4>
+              <p className="text-xs sm:text-sm italic text-indigo-200 leading-relaxed max-w-sm mx-auto">
                 "{card.exampleSentence}"
               </p>
             </div>
@@ -133,7 +134,7 @@ export const FlashcardDeck = () => {
             <Button
               onClick={handlePlayWord}
               size="sm"
-              className="bg-white/10 hover:bg-white/20 text-white rounded-xl gap-1.5 text-xs font-bold border border-white/20"
+              className="bg-white/10 hover:bg-white/20 text-white rounded-2xl min-h-[44px] px-4 gap-2 text-xs font-bold border border-white/20 active:scale-95"
             >
               <Volume2 className="w-4 h-4" /> Pronunciación
             </Button>
@@ -141,24 +142,24 @@ export const FlashcardDeck = () => {
         </div>
       </div>
 
-      {/* Navigation Controls */}
+      {/* Navegación táctil inferior */}
       <div className="flex items-center justify-between pt-2">
         <Button
           onClick={handlePrev}
           variant="outline"
           size="sm"
-          className="rounded-xl gap-1.5 text-xs font-bold"
+          className="rounded-2xl min-h-[44px] px-4 gap-2 text-xs font-bold active:scale-95"
         >
           <ArrowLeft className="w-4 h-4" /> Anterior
         </Button>
 
-        <span className="text-xs font-bold text-muted-foreground">
+        <span className="text-xs font-bold text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-full border">
           {currentIndex + 1} / {flashcards.length}
         </span>
 
         <Button
           onClick={handleNext}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl gap-1.5 text-xs font-bold"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl min-h-[44px] px-4 gap-2 text-xs font-bold shadow-md shadow-indigo-600/20 active:scale-95"
         >
           Siguiente <ArrowRight className="w-4 h-4" />
         </Button>
